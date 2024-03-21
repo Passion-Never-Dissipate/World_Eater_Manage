@@ -8,8 +8,9 @@ from mcdreforged.api.all import *
 bots_list = {}
 bots_restart_list = []
 pos3d = []
-dimension = 0
+dimension = None
 time_out = 5
+USER = None
 
 Prefix = '!!we'
 help_msg = '''
@@ -37,19 +38,12 @@ def conversion_pos(chunk):
     return chunk*16
 
 def spawn_bot(source: CommandSource, dic: dict):
-    if dic['dim'] not in [-1, 0, 1]:
-        source.reply(f"维度{dic['dim']}不存在")
-        return
 
     if 'name' not in dic:
-        while True:
-            value = 1
-            try:
-                bots_list[f'w{value}']
-                value = value + 1
-            except:
-                dic['name'] = f'w{value}'
-                break
+        value = 1
+        while bots_list.get(f"w{value}", False):
+            value = value + 1
+            dic['name'] = f'w{value}'
 
     if dic['name'] in bots_list:
         source.reply(f"{dic['name']}已存在")
@@ -58,36 +52,42 @@ def spawn_bot(source: CommandSource, dic: dict):
     botid = 0
     bots_list[dic['name']] = {}
 
-    if dic['dim'] == 0:
-        dim = 'overworld'
-    elif dic['dim'] == -1:
-        dim = 'nether'
-    elif dic['dim'] == 1:
-        dim = 'the_end'
-
     if dic['x2'] < dic['x1']:
         dic['x2'], dic['x1'] = dic['x1'], dic['x2']
     if dic['z2'] < dic['z1']:
         dic['z2'], dic['z1'] = dic['z1'], dic['z2']
 
-    for xpos in range(conversion_chunk(dic['x1']) - dic['view'], conversion_chunk(dic['x2']), dic['view'] * 2 + 1):
-        for zpos in range(conversion_chunk(dic['z1'])- dic['view'], conversion_chunk(dic['z2']), dic['view'] * 2 + 1):
-            botid = botid + 1
-            source.get_server().execute(f"/player {dic['name']}_{botid} spawn at {conversion_pos(xpos)} 100 {conversion_pos(zpos)} facing 0 0 in minecraft:overworld in spectator")
-            bots_list[dic['name']][f"{dic['name']}_{botid}"] = (xpos, zpos)
 
-    if botid == 0:
+    if abs(dic['x1'] - dic['x2']) <= dic['view'] * 2 + 1 and abs(dic['z1'] - dic['z2']) <= dic['view'] * 2 + 1:
         x = conversion_pos(dic['x1']) + abs(dic['x1'] - dic['x2']) // 2
         z = conversion_pos(dic['z1']) + abs(dic['z1'] - dic['z2']) // 2
         botid = botid + 1
-        source.get_server().execute(f"/player {dic['name']}_{botid} spawn at {x} 100 {z} facing 0 0 in minecraft:{dim} in spectator")
+        source.get_server().execute(f"/player {dic['name']}_{botid} spawn at {x} 100 {z} facing 0 0 in minecraft:{dimension} in spectator")
         bots_list[dic['name']][f"{dic['name']}_{botid}"] = (x, z)
+    else:
+        botid = botid + 1
+        source.get_server().execute(
+            f"/player {dic['name']}_{botid} spawn at {dic['x1'] + dic['view'] + 1} 100 {dic['z1'] + dic['view'] + 1} facing 0 0 in minecraft:{dimension} in spectator")
+        bots_list[dic['name']][f"{dic['name']}_{botid}"] = (dic['x1'] + dic['view'] + 1, dic['z1'] + dic['view'] + 1)
+        for xpos in range(conversion_chunk(dic['x1']) + dic['view'], conversion_chunk(dic['x2']), dic['view'] * 2 + 1):
+            for zpos in range(conversion_chunk(dic['z1']) - dic['view'], conversion_chunk(dic['z2']), dic['view'] * 2 + 1):
+                botid = botid + 1
+                source.get_server().execute(f"/player {dic['name']}_{botid} spawn at {conversion_pos(xpos)} 100 {conversion_pos(zpos)} facing 0 0 in minecraft:{dimension} in spectator")
+                bots_list[dic['name']][f"{dic['name']}_{botid}"] = (xpos, zpos)
+
+
 
     source.reply(f"成功生成{botid}个假人")
 
 @new_thread("rspawn_bot")
 def rspawn_bot(source: CommandSource, dic: dict):
     global pos3d, dimension
+
+    if 'name' not in dic:
+        value = 1
+        while bots_list.get(f"w{value}", False):
+            value = value + 1
+            dic['name'] = f'w{value}'
 
     if dic['r'] < 0:
         source.reply("半径应为大于等于0的整数!")
@@ -99,7 +99,7 @@ def rspawn_bot(source: CommandSource, dic: dict):
         source.get_server().execute(f"data get entity {source.get_info().player} Pos")
 
     t1 = time.time()
-    while not pos3d:
+    while not pos3d and not dimension:
         time.sleep(0.1)
         if time.time() - t1 > time_out:
             source.reply("获取玩家坐标超时")
@@ -112,32 +112,26 @@ def rspawn_bot(source: CommandSource, dic: dict):
         user_xpos = conversion_chunk(int(float(pos3d[0])))
         user_zpos = conversion_chunk(int(float(pos3d[2])))
 
-        dic['x1'] = user_xpos - dic['r']
-        dic['x2'] = user_xpos + dic['r']
-        dic['z1'] = user_zpos - dic['r']
-        dic['z2'] = user_zpos + dic['r']
+        dic['x1'] = conversion_pos(user_xpos - dic['r'])
+        dic['x2'] = conversion_pos(user_xpos + dic['r'])
+        dic['z1'] = conversion_pos(user_zpos - dic['r'])
+        dic['z2'] = conversion_pos(user_zpos + dic['r'])
         dic['dim'] = dimension
 
-    spawn_bot(source,dic)
-    source.reply(f"只能由玩家进行该指令")
+    spawn_bot(source, dic)
 
 @new_thread("get_info")
 def on_info(server: PluginServerInterface, info: Info):
     global pos3d, dimension
     if info.content.count("has the following entity data: ") and info.is_from_server:
 
-        if len(info.content.split(" ")) == 9 :
-            temp = [pos.rstrip('d').strip() for pos in info.content.split(":")[-1][2: -1].split(",")]
-            server.logger.info(temp)
-            pos3d.extend(temp)
+        if len(info.content.split(" ")) == 9:
+            pos3d = [pos.rstrip('d').strip() for pos in info.content.split(":")[-1][2: -1].split(",")]
             return
 
-        if info.content.split(" ")[-1][0: -1] == "overworld":
-            dimension = 0
-        elif info.content.split(" ")[-1][0: -1] == "the_end":
-            dimension = 1
-        elif info.content.split(" ")[-1][0: -1] == "nether":
-            dimension = -1
+        if info.content.split(":")[-1][0: -1] == "overworld" or "the_nether" or "the_end":
+            dimension = info.content.split(":")[-1][0: -1]
+
 
 def kill_bot(source: CommandSource, dic: dict):
     for bot in bots_list[dic['name']]:
@@ -182,7 +176,7 @@ def on_load(server: PluginServerInterface, prev: PluginServerInterface):
     builder.arg('z1', Integer)
     builder.arg('x2', Integer)
     builder.arg('z2', Integer)
-    builder.arg('dim', Integer)
+    builder.arg('dim', Text)
     builder.arg('view', Integer)
     builder.arg('name', Text)
     builder.arg('r', Integer)
