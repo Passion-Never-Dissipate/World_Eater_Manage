@@ -8,7 +8,6 @@ class we_config(Serializable):
     y_position: int = 128
     gamemode: str = "spectator"
     group_name: str = "we"
-    server_path: str = "./server"
     max_chunk_length: int = 51
     minimum_permission_level: Dict[str, int] = {
         "spawn": 1,

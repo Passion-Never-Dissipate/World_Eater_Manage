@@ -30,8 +30,6 @@ y_position = we.y_position
 
 group_name = we.group_name
 
-server_path = we.server_path
-
 max_chunk_length = we.max_chunk_length
 
 user = None
@@ -319,7 +317,7 @@ def on_server_startup(server: PluginServerInterface):
 
 
 def on_load(server: PluginServerInterface, prev_module):
-    global cfg, bot_prefix, bot_suffix, y_position, gamemode, group_name, server_path, max_chunk_length, bot_list, restart_list
+    global cfg, bot_prefix, bot_suffix, y_position, gamemode, group_name, max_chunk_length, bot_list, restart_list
 
     if not os.path.exists("./config/world_eater.json"):
         with codecs.open("./config/world_eater.json", "w", encoding="utf-8-sig") as fp:
@@ -342,8 +340,6 @@ def on_load(server: PluginServerInterface, prev_module):
     gamemode = cfg["gamemode"]
 
     group_name = cfg["group_name"]
-
-    server_path = cfg["server_path"]
 
     max_chunk_length = cfg["max_chunk_length"]
 
