@@ -1,0 +1,21 @@
+{
+	"id": "world_eater_manage",
+	"version": "1.0.0",
+	"name": "World Eater Manage",
+	"description": {
+		"en_us": "An MCDR plugin that stores various instructions for multimodal execution based on scripts",
+		"zh_cn": "一个帮助你更好帮助你更好的使用世吞的插件"
+	},
+	"author": [
+		"Bexerlmao","FRUITS_CANDY"
+	],
+	"link": "https://github.com/Passion-Never-Dissipate/World_Eater_Manage",
+	"dependencies": {
+		"mcdreforged": ">=2.6.0"
+	},
+	"archive_name": "world_eater_manage-{version}",
+	"resources": [
+		"LICENSE",
+		"lang"
+	]
+}
