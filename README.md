@@ -53,6 +53,8 @@ we1_1,we1_2 格式为 组名_假人编号
 
 !!we list 查看正在运行的假人组
 
+!!we reload 重载本插件
+
 ## 配置文件说明
 配置文件为 `config/world_eater.json`。它会在第一次运行时自动生成
 
