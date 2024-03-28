@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"name": "World Eater Manage",
 	"description": {
-		"en_us": "An MCDR plugin that stores various instructions for multimodal execution based on scripts",
-		"zh_cn": "一个帮助你更好帮助你更好的使用世吞的插件"
+		"en_us": "A plugin designed for managing the World Eater on the vanilla server",
+		"zh_cn": "一个为原版服务器设计的世吞假人管理插件"
 	},
 	"author": [
 		"Bexerlmao","FRUITS_CANDY"
