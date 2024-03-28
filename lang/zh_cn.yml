@@ -7,7 +7,7 @@ world_eater_manage:
     §d【格式说明】
     #sc={0}<>st=点击运行指令#{0} §e查看帮助信息
     #sc={0} spawn<>st=点击运行指令#{0} spawn <x1> <z1> <x2> <z2> <维度:0主世界,-1地狱,1末地> <服务器视距> <组名> §e以坐标围成的空置域生成假人组
-    #sc={0} spawn<>st=点击运行指令#{0} spawn <区块半径> <服务器视距> <假人名> §e以玩家所在区块为中心,框选(2r+1)*(2r+1)大小的区块生成假人组
+    #sc={0} rspawn<>st=点击运行指令#{0} rspawn <区块半径> <服务器视距> <假人名> §e以玩家所在区块为中心,框选(2r+1)*(2r+1)大小的区块生成假人组
     #sc={0} kill<>st=点击运行指令#{0} kill <假人名> §e删除该组假人并使其退出游戏
     #sc={0} restart<>st=点击运行指令#{0} restart <假人名> §e使该组假人在服务器重启后自动生成
     #sc={0} list<>st=点击运行指令#{0} list §e查看正在运行的世吞假人组
@@ -16,8 +16,40 @@ world_eater_manage:
 
   lack_permission: §c你没有权限执行这个指令
 
-  spawn_command: /player {} spawn at {} {} {} facing 0 0 in minecraft:{} in {}
+  spawn_command: /player {} spawn at {} {} {} facing 0 0 in {} in {}
 
   kill_command: /player {} kill
 
   list: "- {0} #sc=!!we kill {0}<>st=删除该假人组#§c§l[X] #sc=!!we restart {0}<>st=使该组假人在服务器重启后自动生成#§a§l[↪]"
+
+  spawn_error:
+    repeat: §c§l假人组名重复
+    unknown_error: "创建假人组出现错误: §c{}"
+    dim_error: §c该维度不存在
+    char_error: §c组名只能使用英文字符!
+
+  spawn: "§a成功创建假人组: §6{}"
+
+  rspawn_error: §c只有玩家可以使用该指令
+
+  kill: "§a成功删除假人组: §6{}"
+
+  kill_error: 假人组§c{}§f不存在
+
+  restart: 已将§a{}§f添加到自动重启列表中
+
+  restart_error:
+    repeat: §c{}§f已在自动重启列表中
+    empty: 假人组§c{}§f不存在
+
+  msg:
+    title: §d【正在运行的假人组】
+    empty: §c没有正在运行的假人组
+
+  clear: §a成功清除所有假人组
+
+  reload: §a插件已重载
+
+  timeout: §c运行指令超时,请重试
+
+  limit: 最大允许的区块加载边长为§c{}§f,如需提高，请在配置文件里修改
