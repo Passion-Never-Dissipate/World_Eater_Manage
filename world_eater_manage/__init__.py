@@ -106,7 +106,7 @@ class bot:
 
         for i in self.info:
             ServerInterface.get_instance().execute(
-                tr("kill_command", i)
+                tr("kill_command", bot_prefix + i + bot_suffix)
             )
             time.sleep(0.01)
 
@@ -174,7 +174,7 @@ class bot:
         for i, k in enumerate(range(height_count)):
             init_x = max(x1, x2) - (r - 1)
             for j, _ in enumerate(range(width_count)):
-                info[bot_prefix + group + "_" + str(c) + bot_suffix] = (init_x * 16 + 8, init_z * 16 + 8)
+                info[group + "_" + str(c)] = (init_x * 16 + 8, init_z * 16 + 8)
                 c += 1
                 if j == 0 and width_remain > 0:
                     init_x -= width_remain
@@ -194,7 +194,7 @@ def tr(key, *args):
 
 
 def print_help_msg(source: CommandSource):
-    source.reply(Message.get_json_str(tr("help_message", Prefix, "World_Eater_Manage", "1.0.0")))
+    source.reply(Message.get_json_str(tr("help_message", Prefix, "World_Eater_Manage", "1.3.0")))
 
 
 @new_thread("we_spawn")
@@ -287,13 +287,19 @@ def list_bot(source: CommandSource):
 
 
 def clear_bot(source: CommandSource):
+    global restart_list, bot_list
     for i in bot_list.values():
         if i:
             for j in i.values():
                 j.kill()
 
-    bot_list.clear()
-    restart_list.clear()
+    restart_list = {
+        "default": {},
+        "manual": {}
+    }
+
+    bot_list = copy.deepcopy(restart_list)
+
     source.reply(tr("clear"))
 
 
