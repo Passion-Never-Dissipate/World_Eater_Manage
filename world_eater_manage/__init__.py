@@ -108,7 +108,12 @@ class bot:
 
         for i in self.info:
             ServerInterface.get_instance().execute(
-                tr("kill_command", self.prefix + i + self.suffix)
+                tr(
+                    "kill_command", getattr(
+                        self, "prefix", cfg.bot_prefix) + i + getattr(
+                        self, "suffix", cfg.bot_suffix
+                    )
+                )
             )
             time.sleep(0.01)
 
