@@ -1,10 +1,9 @@
-import json
 import os
-import codecs
 import time
 import re
 import math
 import copy
+import traceback
 
 from mcdreforged.api.all import *
 from world_eater_manage.config import we_config as we
@@ -12,25 +11,11 @@ from world_eater_manage.json_message import Message
 
 Prefix = '!!we'
 
-dim_list = {
-    0: "minecraft:overworld",
-    -1: "minecraft:the_nether",
-    1: "minecraft:the_end"
-}
+coding = "utf-8-sig"
 
-cfg = we.get_default().serialize()
+cfg_path = os.path.join(".", "config", "world_eater.json")
 
-bot_prefix = we.bot_prefix
-
-bot_suffix = we.bot_suffix
-
-gamemode = we.gamemode
-
-y_position = we.y_position
-
-group_name = we.group_name
-
-max_chunk_length = we.max_chunk_length
+cfg = we
 
 user = None
 
@@ -43,6 +28,21 @@ restart_list = {
 
 bot_list = copy.deepcopy(restart_list)
 
+'''
+ep:
+bot_list = {
+    "default": {
+        "we1": bot:we1 组we1对应的由bot类创建的对象,
+        "we2": bot:we2 组we2对应的由bot类创建的对象
+    },
+    "manual": {
+        "load1": bot:load1 组load1对应的由bot类创建的对象,
+        "bot1": bot:load1 组bot1对应的由bot类创建的对象
+    }
+}
+restart_list的结构与上例相同
+'''
+
 
 class bot:
 
@@ -50,7 +50,7 @@ class bot:
 
         if "group" not in dic:
             tag = "default"
-            group = self.sort(group_name, tag)
+            group = self.sort(cfg.group_name, tag)
 
         else:
             tag = "manual"
@@ -70,16 +70,16 @@ class bot:
             info_ = self.get_pos_list(dic, group)
 
             if not info_:
-                ServerInterface.get_instance().reply(info, tr("limit", max_chunk_length))
+                ServerInterface.get_instance().reply(info, tr("limit", cfg.max_chunk_length))
                 return
 
             self.info = info_
 
             if "dim" in dic:
-                if not dim_list.get(dic["dim"]):
+                if not cfg.dimension_list.get(str(dic["dim"])):
                     ServerInterface.get_instance().reply(info, tr("spawn_error.dim_error"))
                     return
-                self.dim = dim_list.get(dic["dim"])
+                self.dim = cfg.dimension_list.get(str(dic["dim"]))
 
             else:
                 self.dim = dic["data"][-1]
@@ -87,18 +87,20 @@ class bot:
             self.res = False
             self.group = group
             self.tag = tag
+            self.prefix = cfg.bot_prefix
+            self.suffix = cfg.bot_suffix
             bot_list[self.tag][self.group] = self
             self.spawn()
             ServerInterface.get_instance().reply(info, tr("spawn", self.group))
 
-        except Exception as e:
-            ServerInterface.get_instance().reply(info, tr("spawn_error.unknown_error", e))
+        except Exception:
+            ServerInterface.get_instance().reply(info, tr("spawn_error.unknown_error", traceback.format_exc()))
 
     def spawn(self):
 
         for i, j in self.info.items():
             ServerInterface.get_instance().execute(
-                tr("spawn_command", i, j[0], y_position, j[1], self.dim, gamemode)
+                tr("spawn_command", i, j[0], cfg.y_position, j[1], self.dim, cfg.gamemode)
             )
             time.sleep(0.1)
 
@@ -106,7 +108,7 @@ class bot:
 
         for i in self.info:
             ServerInterface.get_instance().execute(
-                tr("kill_command", bot_prefix + i + bot_suffix)
+                tr("kill_command", self.prefix + i + self.suffix)
             )
             time.sleep(0.01)
 
@@ -126,7 +128,7 @@ class bot:
                         continue
                     return group + str(j)
 
-            lst = sorted([int(i.split(group_name)[-1]) for i in bot_list["default"]])
+            lst = sorted([int(i.split(we.group_name)[-1]) for i in bot_list["default"]])
 
             j = lst[-1] + 1
 
@@ -157,7 +159,7 @@ class bot:
         width = abs(x1 - x2) + 1
         height = abs(z1 - z2) + 1
 
-        if width > max_chunk_length or height > max_chunk_length:
+        if width > cfg.max_chunk_length or height > cfg.max_chunk_length:
             return
 
         r = dic["view"]
@@ -194,7 +196,7 @@ def tr(key, *args):
 
 
 def print_help_msg(source: CommandSource):
-    source.reply(Message.get_json_str(tr("help_message", Prefix, "World_Eater_Manage", "1.3.0")))
+    source.reply(Message.get_json_str(tr("help_message", Prefix, "World_Eater_Manage", "1.4.0")))
 
 
 @new_thread("we_spawn")
@@ -236,11 +238,10 @@ def on_info(server: PluginServerInterface, info: Info):
     if user:
         if info.content.startswith(f"{user} has the following entity data: ") and info.is_from_server:
             raw = info.content.split("entity data: ")[-1]
-            if raw.startswith("["):
+            if len(data) < 1:
                 data.append([i.strip('d') for i in re.findall(r"[-+]?\d*\.\d+", raw)])
-
-            if raw.startswith('"minecraft:'):
-                data.append(raw.replace('"minecraft:', "").strip('"'))
+                return
+            data.append(raw.strip('"'))
 
 
 def kill_bot(source: CommandSource, dic: dict):
@@ -323,47 +324,32 @@ def on_server_startup(server: PluginServerInterface):
 
 
 def on_load(server: PluginServerInterface, prev_module):
-    global cfg, bot_prefix, bot_suffix, y_position, gamemode, group_name, max_chunk_length, bot_list, restart_list
+    global cfg, bot_list, restart_list
 
-    if not os.path.exists("./config/world_eater.json"):
-        with codecs.open("./config/world_eater.json", "w", encoding="utf-8-sig") as fp:
-            json.dump(cfg, fp, ensure_ascii=False, indent=4)
+    if not os.path.exists(cfg_path):
+        ServerInterface.get_instance().as_plugin_server_interface().save_config_simple(
+            config=we.get_default(),
+            file_name=cfg_path,
+            in_data_folder=False,
+            encoding=coding
+        )
 
-    else:
-        with codecs.open("./config/world_eater.json", encoding="utf-8-sig") as fp:
-            cfg = json.load(fp)
+    cfg = ServerInterface.get_instance().as_plugin_server_interface().load_config_simple(
+        file_name=cfg_path,
+        in_data_folder=False,
+        encoding=coding,
+        target_class=we
+    )
 
     if prev_module:
         bot_list = prev_module.bot_list
         restart_list = prev_module.restart_list
 
-    bot_prefix = cfg["bot_prefix"]
-
-    bot_suffix = cfg["bot_suffix"]
-
-    y_position = cfg["y_position"]
-
-    gamemode = cfg["gamemode"]
-
-    group_name = cfg["group_name"]
-
-    max_chunk_length = cfg["max_chunk_length"]
-
-    level_dict = cfg["minimum_permission_level"]
+    level_dict = cfg.minimum_permission_level
 
     require = Requirements()
 
     builder = SimpleCommandBuilder()
-
-    command_literals = [
-        "reload",
-        "spawn",
-        "rspawn",
-        "kill",
-        "clear",
-        "restart",
-        "list"
-    ]
 
     server.register_help_message('!!we', tr("register_message"))
 
@@ -387,7 +373,7 @@ def on_load(server: PluginServerInterface, prev_module):
     builder.arg('group', Text)
     builder.arg('r', Integer)
 
-    for literal in command_literals:
+    for literal in level_dict:
         permission = level_dict[literal]
 
         builder.literal(literal).requires(
