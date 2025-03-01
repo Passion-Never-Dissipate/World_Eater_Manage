@@ -3,7 +3,9 @@ world_eater_manage:
   help_message: |
     ------ {1} {2} ------
     一款专为原版服务器设计的世吞假人管理插件
-    §3作者：Bexerlmao, FRUITS_CANDY
+    §c注意:§f本插件的假人组驻留功能与§cGugle Carpet Addition§f模组的§c假人驻留§f冲突.
+    要使用本插件的假人组驻留功能,请关闭§cGCA§f的§cFakePlayerResident§f(§c假人驻留§f)规则!
+    §3作者：Bexerlmao, FRUITS_CANDY, SeeU_SAMA
     §d【格式说明】
     #sc={0}<>st=点击运行指令#{0} §e查看帮助信息
     #sc={0} spawn<>st=点击运行指令#{0} spawn <x1> <z1> <x2> <z2> <维度:0主世界,-1地狱,1末地> <服务器视距> <组名> §e以坐标围成的空置域生成假人组
@@ -13,6 +15,7 @@ world_eater_manage:
     #sc={0} restart<>st=点击运行指令#{0} restart <组名> §e使该组假人在服务器重启后自动生成
     #sc={0} list<>st=点击运行指令#{0} list §e查看正在运行的世吞假人组
     #sc={0} reload<>st=点击运行指令#{0} reload §e重载本插件
+    #ou=https://github.com/Passion-Never-Dissipate/World_Eater_Manage<>st=点我进入插件仓库了解更多用法#§d想了解更详细的用法?§b点我了解更多§6<——
 
   register_message: 查看与世吞假人助手有关的指令
 
@@ -22,7 +25,9 @@ world_eater_manage:
 
   kill_command: player {} kill
 
-  list: "- {0} #sc=!!we kill {0}<>st=删除该假人组#§c§l[X] #sc=!!we restart {0}<>st=使该组假人在服务器重启后自动生成#§a§l[↪]"
+  list_normal: "- {0} #sc=!!we kill {0}<>st=删除该假人组#§c[X] #sc=!!we restart {0}<>st=使该组假人在服务器重启后自动生成#§a[↪]"
+
+  list_restart: "- {0} #sc=!!we kill {0}<>st=删除该假人组#§c[X] #st=该组假人已在重启列表中#§a[√]"
 
   spawn_error:
     repeat: §c§l假人组名重复
@@ -42,7 +47,11 @@ world_eater_manage:
 
   restart_error:
     repeat: §c{}§f已在自动重启列表中
-    empty: 假人组§c{}§f不存在
+    empty: 假人组§c{}
+    fpr_enabled: |
+      §f检测到§cGugle Carpet Addition§f模组的§cFakePlayerResident§f(§c假人驻留§f)已开启
+      与本插件的§c假人组驻留§f功能冲突,已终止本次操作.
+      若没有使用§cGCA§f,请删除§ecarpet.conf§f文件内的§cFakePlayerResident§f规则.
 
   msg:
     title: §d【正在运行的假人组】
@@ -54,4 +63,4 @@ world_eater_manage:
 
   timeout: §c运行指令超时,请重试
 
-  limit: 最大允许的区块加载边长为§c{}§f,如需提高，请在配置文件里修改
+  limit: 最大允许的区块加载边长为§c{}§f,如需提高,请在配置文件里修改
