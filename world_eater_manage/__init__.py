@@ -8,6 +8,7 @@ import traceback
 from mcdreforged.api.all import *
 from world_eater_manage.config import we_config as we
 from world_eater_manage.json_message import Message
+from ruamel.yaml import YAML
 
 Prefix = '!!we'
 
@@ -115,7 +116,7 @@ class bot:
                     )
                 )
             )
-            time.sleep(0.01)
+            time.sleep(0.05)
 
     def restart(self):
         self.res = True
@@ -195,6 +196,10 @@ class bot:
 
         return info
 
+    @classmethod
+    def is_empty(cls, bot_list_):
+        return not (bot_list_.get("default") or bot_list_.get("manual"))
+
 
 def tr(key, *args):
     return ServerInterface.get_instance().tr(f"world_eater_manage.{key}", *args)
@@ -266,6 +271,10 @@ def kill_bot(source: CommandSource, dic: dict):
 
 
 def restart_bot(source: CommandSource, dic: dict):
+    if get_fpr_status():
+        ServerInterface.get_instance().broadcast(tr("restart_error.fpr_enabled"))
+        return
+
     for i in bot_list.values():
         if i.get(dic["group"]):
             if i.get(dic["group"]).res:
@@ -280,10 +289,12 @@ def restart_bot(source: CommandSource, dic: dict):
 
 def list_bot(source: CommandSource):
     msg = [tr("msg.title")]
-    for i in bot_list.values():
-        if i:
-            for j in i:
-                msg.append(tr("list", j))
+    for g in bot_list.values():
+        for k, v in g.items():
+            if v.res:
+                msg.append(tr("list_restart", k))
+                continue
+            msg.append(tr("list_normal", k))
 
     if len(msg) > 1:
         source.reply(Message.get_json_str("\n".join(msg)))
@@ -295,9 +306,8 @@ def list_bot(source: CommandSource):
 def clear_bot(source: CommandSource):
     global restart_list, bot_list
     for i in bot_list.values():
-        if i:
-            for j in i.values():
-                j.kill()
+        for j in i.values():
+            j.kill()
 
     restart_list = {
         "default": {},
@@ -320,12 +330,21 @@ def on_unload(server: PluginServerInterface):
 
 
 def on_server_startup(server: PluginServerInterface):
-    global bot_list
+    global bot_list, restart_list
+    if get_fpr_status() and not bot.is_empty(restart_list):
+        restart_list = {
+            "default": {},
+            "manual": {}
+        }
+        bot_list = copy.deepcopy(restart_list)
+        ServerInterface.get_instance().broadcast(tr("restart_error.fpr_enabled"))
+        return
+
     bot_list = copy.deepcopy(restart_list)
+
     for i in bot_list.values():
-        if i:
-            for j in i.values():
-                j.spawn()
+        for j in i.values():
+            j.spawn()
 
 
 def on_load(server: PluginServerInterface, prev_module):
@@ -387,3 +406,64 @@ def on_load(server: PluginServerInterface, prev_module):
         )
 
     builder.register(server)
+
+
+def get_server_folder_name(file_path):
+    yaml = YAML()
+    with open(file_path, 'r', encoding='utf-8') as file:
+        config = yaml.load(file)
+    try:
+        server_name = config['working_directory']
+        return server_name
+    except Exception:
+        # print(f"Key error: {e}. Make sure the key exists in the YAML file.")
+        return None
+
+
+def get_level_name(file_path, key_target):
+    properties = {}
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            if line.startswith('#') or not line.strip():
+                continue
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip()
+            properties[key] = value
+    level_name = properties.get(key_target)
+    return level_name
+
+
+def get_fpr_status():
+    mcdr_config_path = './config.yml'
+    server_name = get_server_folder_name(mcdr_config_path)
+
+    if server_name is None:
+        return
+
+    properties_path = f'./{server_name}/server.properties'
+    level_name = get_level_name(properties_path, "level-name")
+
+    if not level_name:
+        return
+
+    carpet_conf_path = f'./{server_name}/{level_name}/carpet.conf'
+
+    # FPR:FakePlayerResidence of Gugle Carpet Addition, which is not compatible with rspawn function of WE.
+    try:
+        carpet_conf = {}
+        with open(carpet_conf_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                if line.startswith('#') or not line.strip():
+                    continue
+                key, value = line.split(None, 1)
+                key = key.strip()
+                value = value.strip()
+                carpet_conf[key] = value
+
+        fpr_status = carpet_conf.get("fakePlayerResident")
+        bool_map = {"true": True, "false": False}
+        if fpr_status in bool_map:
+            return bool_map[fpr_status]
+    except Exception:
+        return None
