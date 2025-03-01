@@ -11,8 +11,8 @@ class we_config(Serializable):
     max_chunk_length: int = 51
     dimension_list: Dict[str, str] = {
         "0": "minecraft:overworld",
-        "1": "minecraft:the_nether",
-        "-1": "minecraft:the_end"
+        "-1": "minecraft:the_nether",
+        "1": "minecraft:the_end"
     }
     minimum_permission_level: Dict[str, int] = {
         "spawn": 1,
