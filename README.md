@@ -1,12 +1,18 @@
 # World_Eater_Manage
 一个为原版服务器设计的世吞假人管理插件
 > [!TIP]
+>
+> 本插件的假人组驻留功能与Gugle Carpet Addition模组的假人驻留冲突.
+>
+> 要使用本插件的假人组驻留功能,请关闭GCA的FakePlayerResident(假人驻留)规则!
 > 
 > 尽可能的使用最新版本，以避免潜藏的问题，升级版本后请重新生成配置文件
 > 
 > 发现问题请提交issue，如果您想为本项目做出贡献，欢迎提交pr
-> 
-需要 `v2.6.0` 以上的 [MCDReforged](https://github.com/Fallen-Breath/MCDReforged)
+
+在v1.4.0版本，插件新增了对ruamel.yaml库的依赖，但由于MCDR在安装时会安装该库，因此无需额外安装
+
+需要 `v2.7.0` 以上的 [MCDReforged](https://github.com/Fallen-Breath/MCDReforged)
 ## 用前需知
 使用本插件前，请确保您的服务端为fabric，并且安装了carpet mod
 
@@ -30,11 +36,13 @@
 
 we1_1,we1_2 格式为 组名_假人编号
 
-如果你使用一些手段更改了假人的生成id，比如给其加上了前缀:bot_或者后缀_bot,在插件配置文件为默认的情况下
+如果你使用一些手段更改了假人的生成id，比如给其加上了前缀:bot_或者后缀_bot,
 
 上述例子生成的假人id会变更为: bot_we1_1_bot, bot_we1_2_bot
 
-如此一来，插件创建的假人id就与实际生成的假人id不相符，可能会导致一些未知错误
+此时如果我们对两个假人对应的组we1进行清理操作，会发现执行完毕后这两个假人并未被清除
+
+这是因为插件创建的假人id(we1_1,we1_2)与实际生成的假人id(bot_we1_1_bot, bot_we1_2_bot)不符
 
 为了避免这种情况，你可以在配置文件里手动设置生成前缀与后缀,配置文件说明见下。
 ## 命令格式说明
@@ -92,8 +100,24 @@ we1_1,we1_2 格式为 组名_假人编号
 
 该值的设立是为了意外情况下，选择了非常大的一片区块，生成了大量假人
 
+### dimension_list
+默认值: 
+```
+    {
+        "0": "minecraft:overworld",
+        "-1": "minecraft:the_nether",
+        "1": "minecraft:the_end"
+    }
+```
+
+一个字典，代表服务器的维度数字键与维度名称的映射.
+
+如果你的服务器有其他维度，通过修改映射可以使插件在其他维度使用
+
 ### minimum_permission_level
-默认值：`{
+默认值：
+```
+    {
         "spawn": 1,
         "rspawn": 1,
         "kill": 1,
@@ -101,7 +125,8 @@ we1_1,we1_2 格式为 组名_假人编号
         "reload": 2,
         "clear": 1,
         "list": 0
-    }`
+    }
+```
     
 一个字典，代表使用不同类型指令需要权限等级。数值含义见[此处](https://mcdreforged.readthedocs.io/zh_CN/latest/permission.html)
 
