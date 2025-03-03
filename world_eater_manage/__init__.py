@@ -206,7 +206,7 @@ def tr(key, *args):
 
 
 def print_help_msg(source: CommandSource):
-    source.reply(Message.get_json_str(tr("help_message", Prefix, "World_Eater_Manage", "1.4.0")))
+    source.reply(Message.get_json_str(tr("help_message", Prefix, "World_Eater_Manage", "1.4.1")))
 
 
 @new_thread("we_spawn")
