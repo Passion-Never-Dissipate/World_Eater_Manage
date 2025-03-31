@@ -1,5 +1,10 @@
 # World_Eater_Manage
 一个为原版服务器设计的世吞假人管理插件
+
+> [!WARNING]
+>
+> 如果您正在使用1.21.5及以上的minecraft版本，请将MCDR版本升级至2.14.7或更高版本，以确保插件的Rtext能正常工作
+
 > [!TIP]
 >
 > 本插件的假人组驻留功能与Gugle Carpet Addition模组的假人驻留冲突.
