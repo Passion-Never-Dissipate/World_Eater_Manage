@@ -1,0 +1,66 @@
+world_eater_manage:
+
+  help_message: |
+    ------ {1} {2} ------
+    An bot management plugin designed for vanilla servers to handle world eaters.
+    §cCaution: §fThis plugin's fake player residency feature conflicts with the §cFakePlayerResident§f of the §cGugle Carpet Addition mod§f.
+    To use the fake player residency feature of this plugin, please disable rule §cFakePlayerResident§f on §cGCA§f!
+    §3Authors: Bexerlmao, FRUITS_CANDY, SeeU_SAMA
+    §d[Pattern statement]
+    #sc={0}<>st=click to run command#{0} §eView help
+    #sc={0} spawn<>st=click to run command#{0} spawn <x1> <z1> <x2> <z2> <Dim:0Overworld,-1Nether,1The End> <View distance> <Group name> §eGenerate bots within the empty domain enclosed by coordinates.
+    #sc={0} rspawn<>st=click to run command#{0} rspawn <Chunk radius> <View distance> <Group name> §eCentered on the player's block, select a block of size (2r+1)*(2r+1) to generate bots.
+    #sc={0} kill<>st=click to run command#{0} kill <Group name> §eDelete current group of bots and make them exit the game.
+    #sc={0} clear<>st=click to run command#{0} clear §eDelete all bot groups.
+    #sc={0} restart<>st=click to run command#{0} restart <Group name> §eEnsure that current group of bots is automatically generated after the server restarts.
+    #sc={0} list<>st=click to run command#{0} list §eLook up the loaded bot groups.
+    #sc={0} reload<>st=click to run command#{0} reload §eReload this plugin.
+    #ou=https://github.com/Passion-Never-Dissipate/World_Eater_Manage<>st=Click here to enter the plugin repository for more usage details# §dWant to learn about the detailed usage? §bClick me to get the info§6<——
+
+  register_message: View commands related to World Eater Manage plugin.
+
+  lack_permission: §cYou do not have permission to execute this command.
+
+  spawn_command: player {} spawn at {} {} {} facing 0 0 in {} in {}
+
+  kill_command: player {} kill
+
+  list_normal: "- {0} #sc=!!we kill {0}<>st=Delete current group of bots#§c[X] #sc=!!we restart {0}<>st=Ensure that current group of bots is automatically generated after the server restarts#§a[↪]"
+
+  list_restart: "- {0} #sc=!!we kill {0}<>st=Delete current group of bots#§c[X] #st=This group of bots has been added to the restart list#§a[√]"
+
+  spawn_error:
+    repeat: §c§lGroup name repeats!
+    unknown_error: "Error while spawn: §c{}"
+    dim_error: §cThis dimension do not exists!
+    char_error: §cCan use only English characters for group names!
+
+  spawn: "§aSuccessfully created the bot group: §6{}"
+
+  rspawn_error: §cThis command can use only by player!
+
+  kill: "§aSuccessfully deleted the bot group: §6{}"
+
+  kill_error: The bot group§c{}§fdo not exists!
+
+  restart: §a{}§f§a{}§f has been added to the auto-restart list.
+
+  restart_error:
+    repeat: §c{}§f is already in the automatic restart list!
+    empty: The bot group§c{}
+    fpr_enabled: |
+      §fDetected the §cFakePlayerResident§f has enabled in §cGugle Carpet Addition§f
+      conflict with §cFakePlayerResident§f in this plugin, operation has been terminated.
+      If without §cGCA§f while operating, please delete §cFakePlayerResident§f rule in §ecarpet.conf§f.
+
+  msg:
+    title: §d[Loaded bot groups]
+    empty: §cThere's been no loaded bot groups.
+
+  clear: §aDeleted all bot groups.
+
+  reload: §aPlugin has been reloaded.
+
+  timeout: §cTime out while running commands, please retry.
+
+  limit: The maximum allowed block loading edge length is §c{}§f. Please modify this in the configuration file.
