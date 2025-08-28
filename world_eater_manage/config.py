@@ -23,4 +23,5 @@ class we_config(Serializable):
         "clear": 1,
         "list": 0
     }
-    created_version: str = "1.4.1"
+    created_version: str = "1.4.2"
+
